@@ -77,7 +77,7 @@ trait ConvertAnnots { this: PurityDomain =>
       case Ident(_) =>
         if (sym == anyLocObject) AnyLoc
         else {
-          assert(sym.isValueParameter || sym.isLocal, msg)
+          assert(sym.isValueParameter || sym.isLocalToBlock, msg)
           RefSet(SymRef(sym))
         }
 

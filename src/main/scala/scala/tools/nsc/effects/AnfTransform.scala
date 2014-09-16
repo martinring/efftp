@@ -154,7 +154,7 @@ trait AnfTransform { self: EffectDomain =>
     }
 
     private def mkVal(prefix: String, rhs: Tree, pos: Position): ValDef = {
-      val vd = ValDef(NoMods, freshName(prefix), TypeTree(), rhs)
+      val vd = ValDef(NoMods, TermName(freshName(prefix)), TypeTree(), rhs)
       vd.setPos(pos)
       vd
     }

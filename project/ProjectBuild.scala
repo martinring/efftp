@@ -12,9 +12,9 @@ object ProjectBuild extends Build {
 
   // settings valid for both projects (the plugin and the tests)
   val sharedSettings = Seq (
-    scalaVersion := "2.10.1",
+    scalaVersion := "2.11.2",
     libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-compiler" % _ ),
-
+    scalacOptions ++= Seq("-unchecked", "-deprecation"),
     // #customScalaVersion
     // to be clear we're not using a release
     // scalaVersion := scalaVersionString,
@@ -34,7 +34,7 @@ object ProjectBuild extends Build {
 
     // scalacOptions += "-feature",
 
-    libraryDependencies += "org.scalatest" % "scalatest_2.10" % "1.9.1" % "test",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.1" % "test",
     libraryDependencies += "org.springframework" % "spring-core" % "3.2.1.RELEASE" % "test"
   )
 

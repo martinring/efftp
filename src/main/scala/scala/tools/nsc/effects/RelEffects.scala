@@ -221,8 +221,8 @@ trait RelEffects { self: EffectDomain =>
       // (refchecks), so running typer. need to travel to typer phase for that, otherwise we can
       // end up with an assertion failure ("silent mode is not available past typer")
       //
-      // in 2.11, replace `atPhase(currentRun.typerPhase.next)` by `exitingPhase(currentRun.typerPhase)`
-      val typedArgs = atPhase(currentRun.typerPhase.next){ args map (typer.typed(_)) }
+      // in 2.11, replaced `atPhase(currentRun.typerPhase.next)` by `exitingPhase(currentRun.typerPhase)`
+      val typedArgs = exitingPhase(currentRun.typerPhase){ args map (typer.typed(_)) }
       List(AnnotationInfo(pureClass.tpe, typedArgs, List()))
     }
   }

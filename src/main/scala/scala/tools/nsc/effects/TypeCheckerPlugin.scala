@@ -1,8 +1,8 @@
 package scala.tools.nsc.effects
 
 import scala.tools.nsc.Global
-
 import collection.mutable
+import scala.reflect.internal.Mode
 
 trait TypeCheckerPlugin extends TypeUtils { // self: EffectChecker =>
   val global: Global
@@ -199,7 +199,7 @@ trait TypeCheckerPlugin extends TypeUtils { // self: EffectChecker =>
      *
      * @TODO: doc why, see session.md
      */
-    override def pluginsPt(pt: Type, typer: Typer, tree: Tree, mode: Int): Type = {
+    override def pluginsPt(pt: Type, typer: Typer, tree: Tree, mode: Mode): Type = {
       removeAllEffectAnnotations(pt)
     }
 
@@ -325,7 +325,7 @@ trait TypeCheckerPlugin extends TypeUtils { // self: EffectChecker =>
       val parentContextMsg    = Some(constrMismatchMsg + "\nThe mismatch is due to the initializer of a parent trait.")
 
 
-      /* constroctor effect */
+      /* constructor effect */
       
       /* We create a copy of the block as a workaround for a bug. The problem is that `Typer.parentTypes` only works
        * correctly for polymorphic parent types with inferred type arguments if the `rhs` block of the primary constructor
@@ -383,7 +383,8 @@ trait TypeCheckerPlugin extends TypeUtils { // self: EffectChecker =>
               // like in typedStats
               imp.symbol.initialize
               if (!imp.symbol.isError) {
-                templTyper.context = templTyper.context.makeNewImport(imp)
+                // FIXME: changed makeNewImport to make, was that correct?
+                templTyper.context = templTyper.context.make(imp)
               }
               (fields, stats)
 
@@ -531,10 +532,11 @@ trait TypeCheckerPlugin extends TypeUtils { // self: EffectChecker =>
 
       val typeDefAnnots = constrEffTypeDefAnnots(ddef, Some(templ), templateTyper, alreadyTyped = false)
       annotatedConstrEffect(constrSym, typeDefAnnots).getOrElse {
+        
+        
 
-        val typedParents = analyzer.newTyper(templateTyper.context.outer).parentTypes(templ)
+        val typedParents = analyzer.newTyper(templateTyper.context.outer).typedParentTypes(templ)
 
-        /* FOR 2.11, NEED THE FOLLOWING
         val constrBody = ddef.rhs match {
           case Block(earlyVals :+ global.pendingSuperCall, unit) =>
             val argss = analyzer.superArgs(typedParents.head) getOrElse Nil
@@ -544,7 +546,7 @@ trait TypeCheckerPlugin extends TypeUtils { // self: EffectChecker =>
             Block(earlyVals :+ superCall, unit)
           case rhs => rhs
         }
-        */
+
         inferPrimaryConstrEff(ddef, defTyper, templ, templateTyper,
                               typedParents, alreadyTyped = false, expected = None)
       }
@@ -774,7 +776,7 @@ trait TypeCheckerPlugin extends TypeUtils { // self: EffectChecker =>
      * we verify that the effect of the body conforms to the annotated effect. In order to do the same for
      * the primary constructor, we have to compute the effect of multiple parts of the class template.
      */
-    override def pluginsTyped(tpe: Type, typer: Typer, tree: Tree, mode: Int, pt: Type): Type =
+    override def pluginsTyped(tpe: Type, typer: Typer, tree: Tree, mode: Mode, pt: Type): Type =
       if (tree.isTerm) tree match {
         case Function(params, body) =>
           val funSym = tree.symbol
@@ -895,10 +897,20 @@ trait TypeCheckerPlugin extends TypeUtils { // self: EffectChecker =>
 
     EffectContext(expected, relEnv, effectReporter(typer), detailsMsg, patternMode = false)
   }
-
-  def changeErrorMessage(err: AbsTypeError, msg: String): AbsTypeError = new AbsTypeError {
-    def errMsg = msg
-    def errPos = err.errPos
-    def kind = err.kind
-  }
+      
+  def changeErrorMessage(err: AbsTypeError, msg: String): AbsTypeError = {
+    import analyzer._
+    err match {
+      case AmbiguousTypeError(errPos, errMsg) => AmbiguousTypeError(errPos,msg)
+      case AmbiguousImplicitTypeError(underlyingTree, errMsg) => AmbiguousImplicitTypeError(underlyingTree, msg)
+      case NormalTypeError(underlyingTree, errMsg) => NormalTypeError(underlyingTree, msg)
+      case AccessTypeError(underlyingTree, errMsg) => AccessTypeError(underlyingTree, msg)
+      case SymbolTypeError(underlyingSym, errMsg) => SymbolTypeError(underlyingSym, msg)
+      case PosAndMsgTypeError(errPos, errMsg) => PosAndMsgTypeError(errPos, msg)
+      // FIXME: can't change messages for these three, problem?
+      case TypeErrorWithUnderlyingTree(tree, ex) => TypeErrorWithUnderlyingTree(tree, ex)
+      case DivergentImplicitTypeError(underlyingTree, pt0, sym) => DivergentImplicitTypeError(underlyingTree, pt0, sym)
+      case TypeErrorWrapper(ex: TypeError) => TypeErrorWrapper(ex)
+    }    
+  } 
 }

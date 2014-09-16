@@ -21,7 +21,7 @@ trait TypeUtils { self: TypeCheckerPlugin =>
    * Remove annotations with a type in `cls` from the type `tp`.
    */
   private def removeAnnotations(tp: Type, cls: List[Symbol]): Type = tp match {
-    case AnnotatedType(annots, underlying, _) =>
+    case AnnotatedType(annots, underlying) =>
       underlying.withAnnotations(annots.filterNot(ann => cls.contains(ann.atp.typeSymbol)))
     
     case st @ SingleType(pre, sym) =>

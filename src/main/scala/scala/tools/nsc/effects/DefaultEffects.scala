@@ -7,7 +7,7 @@ trait DefaultEffects { self: EffectDomain =>
   import global.{definitions => d}
   import global.{rootMirror => m}
 
-  lazy val classesWithPureMethods: List[Symbol] = List(
+  lazy val classesWithPureMethods: IndexedSeq[Symbol] = IndexedSeq(
     d.ObjectClass,
     d.StringClass,
     d.AnyRefClass,
@@ -17,15 +17,15 @@ trait DefaultEffects { self: EffectDomain =>
     d.SerializableClass
   ) ++
     d.ScalaValueClasses ++
-    d.TupleClass.toList
+    d.TupleClass.seq
 
-  lazy val classesWithPureConstructors: List[Symbol] = List(
+  lazy val classesWithPureConstructors: IndexedSeq[Symbol] = IndexedSeq(
     d.ThrowableClass,
     m.requiredClass[Exception],
     m.requiredClass[RuntimeException]
   ) ++
-    d.AbstractFunctionClass.toList ++
-    d.FunctionClass.toList
+    d.AbstractFunctionClass.seq ++
+    d.FunctionClass.seq
 
 
 

@@ -1,7 +1,7 @@
 package scala.tools.nsc.effects
 
 import java.io.{PrintWriter, StringWriter}
-import scala.tools.nsc.util.CommandLineParser
+import scala.tools.cmd.CommandLineParser
 import scala.tools.nsc.{Global, Settings}
 import scala.tools.nsc.reporters.{ConsoleReporter, Reporter}
 import reflect.internal.util.BatchSourceFile

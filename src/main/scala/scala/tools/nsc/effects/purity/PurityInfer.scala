@@ -43,7 +43,7 @@ trait PurityInfer extends Infer { this: PurityDomain =>
         if (sym == NoSymbol) {
           assert(ctx.patternMode && name == nme.WILDCARD)
           lattice.noModAnyResLoc
-        } else if (sym.isValueParameter || sym.isLocal)
+        } else if (sym.isValueParameter || sym.isLocalToBlock)
           PurityEffect(RefSet(), Assigns(), RefSet(SymRef(sym)))
         else
           lattice.noModAnyResLoc
@@ -55,7 +55,7 @@ trait PurityInfer extends Infer { this: PurityDomain =>
       // assignments to fields - note that variable fields are usually modified using the setter
       case Assign(sel @ Select(qual, _), rhs) =>
         val fieldSym = sel.symbol
-        assert(fieldSym.isVariable && !fieldSym.isLocal, s"expected variable field, found $fieldSym")
+        assert(fieldSym.isVariable && !fieldSym.isLocalToBlock, s"expected variable field, found $fieldSym")
         val PurityEffect(qualMod, qualAssign, qualLoc) = computeEffect(qual, ctx)
         val PurityEffect(rhsMod, rhsAssign, rhsLoc) = computeEffect(rhs, ctx)
         val assignMod = if (isLocalField(fieldSym)) qualLoc join rhsLoc
@@ -66,7 +66,7 @@ trait PurityInfer extends Infer { this: PurityDomain =>
 
       case Assign(id @ Ident(name), rhs) =>
         val varSym = id.symbol
-        assert(varSym.isVariable && varSym.isLocal, s"expected local variable, found $sym")
+        assert(varSym.isVariable && varSym.isLocalToBlock, s"expected local variable, found $sym")
         val PurityEffect(rhsEff, rhsAssign, rhsLoc) = computeEffect(rhs, ctx)
         val assignEff = Assigns((varSym, rhsLoc))
         PurityEffect(rhsEff, rhsAssign join assignEff, AnyLoc)
@@ -234,7 +234,7 @@ trait PurityInfer extends Infer { this: PurityDomain =>
       case (sym, eff) => (SymRef(sym), eff.loc)
     }
     val substMap = {
-      if (fun.isLocal) argLocs // for local functions, `this` is not substituted
+      if (fun.isLocalToBlock) argLocs // for local functions, `this` is not substituted
       else argLocs + ((ThisRef(fun.owner), funEff.loc))
     }
 

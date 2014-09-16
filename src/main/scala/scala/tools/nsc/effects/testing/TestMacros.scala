@@ -1,7 +1,7 @@
 package scala.tools.nsc.effects.testing
 
 import language.experimental.macros
-import reflect.macros.Context
+import reflect.macros.blackbox.Context
 
 object TestMacros {
   def isSubtype[T](expr: Any): Boolean = macro isSubtypeImpl[T]

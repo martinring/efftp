@@ -39,7 +39,7 @@ abstract class PurityDomain extends EffectDomain with ConvertAnnots with PurityI
       val ref: VarRef = ThisRef(owner)
       // for abstract fields, there is no field symbol. so we check the annotation on the getter.
       // used to be   (atPhase(currentRun.typerPhase)(getter.hasAnnotation(localClass)))
-      val getter = sym.getter(sym.owner)
+      val getter = sym.getterIn(sym.owner)
       if (getter.hasAnnotation(localClass)) {
         // luckily we have the type tpe here - calling sym.info would lead to a cyclic reference
         val List(List(arg)) = tpe.paramss
